@@ -6,6 +6,7 @@ import { LeafletMouseEvent } from 'leaflet'
 import axios from 'axios';
 import api from '../../services/api';
 
+import Dropzone from '../../components/Dropzone';
 import './styles.css';
 import logo from '../../assets/logo.svg';
 
@@ -41,6 +42,7 @@ const CreatePoint = () => {
     const [selectedCity, setSelectedCity] = useState('0');
     const [selectedItems, setSelectedItems] = useState<number[]>([]);
     const [selectedPosition, setSelectedPosition] = useState<[number, number]>([0, 0]);
+    const [selectedFile, setSelectedFile] = useState<File>();
 
     const history = useHistory();
 
@@ -104,7 +106,7 @@ const CreatePoint = () => {
             const filteredItems = selectedItems.filter(item => item !== id);
             setSelectedItems(filteredItems);
         } else {
-            setSelectedItems([ ...selectedItems, id ]);
+            setSelectedItems([...selectedItems, id]);
         }
     }
 
@@ -114,19 +116,23 @@ const CreatePoint = () => {
         const { name, email, whatsapp } = formData;
         const uf = selectedUf;
         const city = selectedCity;
-        const [ latitude, longitude ] = selectedPosition;
+        const [latitude, longitude] = selectedPosition;
         const items = selectedItems;
 
-        const data = {
-            name,
-            email,
-            whatsapp,
-            uf,
-            city,
-            latitude,
-            longitude,
-            items
-        };
+        const data = new FormData();
+
+        data.append('name', name);
+        data.append('email', email);
+        data.append('whatsapp', whatsapp);
+        data.append('uf', uf);
+        data.append('city', city);
+        data.append('latitude', String(latitude));
+        data.append('longitude', String(longitude));
+        data.append('items', items.join(','));
+
+        if (selectedFile) {
+            data.append('image', selectedFile);
+        }
 
         await api.post('points', data);
 
@@ -146,7 +152,11 @@ const CreatePoint = () => {
             </header>
 
             <form onSubmit={handleSubmit}>
+
                 <h1>Cadastro <br /> do ponto de coleta</h1>
+
+                <Dropzone onFileUploaded={setSelectedFile} />
+
                 <fieldset>
 
                     <legend>
